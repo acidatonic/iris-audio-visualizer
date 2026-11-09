@@ -53,7 +53,7 @@ Requires [Node.js](https://nodejs.org/) (v18+ recommended):
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/Iris.git
+git clone https://github.com/acidatonic/iris-audio-visualizer.git
 cd Iris
 
 # Install dependencies
