@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data:; font-src https://fonts.gstatic.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top Frameless Draggable Titlebar -->
+    <header id="titlebar">
+      <!-- Left: Logo & Status Indicator -->
+      <div class="titlebar-left">
+        <div class="brand">
+          <span class="brand-name">Iris</span>
+          <span class="brand-version">1.0</span>
+        </div>
+
+        <div id="status-badge" class="status-indicator">
+          Connecting
+        </div>
+
+        <!-- Real-time Pitch & Frequency Badge -->
+        <div id="pitch-badge" class="pitch-indicator" title="Detected pitch note and dominant frequency">
+          <span class="note">--</span>
+          <span class="freq">0.0 Hz</span>
+        </div>
+      </div>
+
+      <!-- Center: Draggable Spacer -->
+      <div class="titlebar-spacer"></div>
+
+      <!-- Right: Interactive Controls -->
+      <div class="titlebar-controls no-drag">
+        <!-- Audio Source Selector -->
+        <div class="control-group" title="Select audio input source">
+          <label for="source-select">Audio</label>
+          <select id="source-select" class="iris-select no-drag">
+            <option value="desktop:default">System Loopback (PC Audio)</option>
+          </select>
+        </div>
+
+        <!-- Display Tint Button -->
+        <button id="tint-picker-btn" class="tint-btn no-drag" title="Display tint & phosphor palette">
+          <span class="tint-preview" id="tint-preview-dot"></span>
+          <span class="tint-label">Tint</span>
+        </button>
+
+        <!-- Solid Pure Black Mode Toggle -->
+        <button id="mode-solid-btn" class="icon-btn no-drag" title="Toggle transparency (Glass / Solid)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path>
+          </svg>
+          <span id="mode-solid-label">Solid</span>
+        </button>
+
+        <!-- Always-on-top Pin Button -->
+        <button id="pin-btn" class="icon-btn no-drag" title="Pin window always on top">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="17" x2="12" y2="22"></line>
+            <path d="M5 17h14v-2l-3-3V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v7l-3 3v2z"></path>
+          </svg>
+          Pin
+        </button>
+
+        <!-- Window Control Buttons (Studio Flush) -->
+        <div class="window-buttons no-drag">
+          <button id="btn-minimize" class="win-btn no-drag" title="Minimize">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <line x1="3" y1="8" x2="13" y2="8"></line>
+            </svg>
+          </button>
+          <button id="btn-maximize" class="win-btn no-drag" title="Maximize">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3.5" y="3.5" width="9" height="9" rx="1"></rect>
+            </svg>
+          </button>
+          <button id="btn-close" class="win-btn close no-drag" title="Close">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <line x1="4" y1="4" x2="12" y2="12"></line>
+              <line x1="12" y1="4" x2="4" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Module Selector Quick Bar -->
+    <nav id="module-bar" class="no-drag">
+      <div class="module-bar-label">Meters</div>
+      <div class="module-chips">
+        <button class="chip active" data-mod="spectrum">Spectrum</button>
+        <button class="chip active" data-mod="oscilloscope">Oscilloscope</button>
+        <button class="chip active" data-mod="spectrogram">Spectrogram</button>
+        <button class="chip active" data-mod="vectorscope">Stereometer</button>
+        <button class="chip" data-mod="vu-meter">Analog VU</button>
+        <button class="chip" data-mod="waveform">Waveform</button>
+        <button class="chip" data-mod="loudness">Loudness</button>
+      </div>
+    </nav>
+
+    <!-- Main Workspace (Mini Dock Only) -->
+    <main id="workspace" class="workspace layout-dock">
+      <!-- METER 01: SPECTRUM ANALYZER -->
+      <section class="panel-card" data-module="spectrum">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">01</span>
+            <span class="panel-name">Spectrum RTA</span>
+            <span class="panel-sub">20 Hz – 20 kHz log</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <div class="panel-controls-dropdown no-drag">
+              <button id="spec-mode-btn" class="iris-mini-btn no-drag" title="Toggle curve / LED bars">Smooth curve</button>
+            </div>
+            <button class="panel-menu-btn no-drag" title="Module options">
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 6 8 10 12 6"></polyline>
+              </svg>
+            </button>
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-spectrum"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+
+      <!-- METER 02: OSCILLOSCOPE -->
+      <section class="panel-card" data-module="oscilloscope">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">02</span>
+            <span class="panel-name">Oscilloscope</span>
+            <span class="panel-sub">Edge trigger sync</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <div class="panel-controls-dropdown no-drag">
+              <div class="dropdown-item">
+                <span class="dropdown-label">Time</span>
+                <select id="osc-timebase-select" class="iris-mini-select no-drag" title="Timebase window">
+                  <option value="2">2 ms</option>
+                  <option value="5">5 ms</option>
+                  <option value="10" selected>10 ms</option>
+                  <option value="20">20 ms</option>
+                  <option value="50">50 ms</option>
+                </select>
+              </div>
+              <div class="dropdown-item">
+                <span class="dropdown-label">Gain</span>
+                <select id="osc-gain-select" class="iris-mini-select no-drag" title="Gain scaling">
+                  <option value="0.5">0.5x</option>
+                  <option value="1.0" selected>1.0x</option>
+                  <option value="2.0">2.0x</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </div>
+            </div>
+            <button class="panel-menu-btn no-drag" title="Module options">
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 6 8 10 12 6"></polyline>
+              </svg>
+            </button>
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-oscilloscope"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+
+      <!-- METER 03: SPECTROGRAM WATERFALL -->
+      <section class="panel-card" data-module="spectrogram">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">03</span>
+            <span class="panel-name">Spectrogram</span>
+            <span class="panel-sub">2D waterfall</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-spectrogram"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+
+      <!-- METER 04: STEREOMETER (DIAMOND / DOTS / AUTO-GAIN) -->
+      <section class="panel-card" data-module="vectorscope">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">04</span>
+            <span class="panel-name">Stereometer</span>
+            <span class="panel-sub">Lissajous & phase</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <div class="panel-controls-dropdown no-drag">
+              <button id="stereo-shape-btn" class="iris-mini-btn no-drag active" title="Toggle rhombus / circle boundary">Rhombus</button>
+              <button id="stereo-render-btn" class="iris-mini-btn no-drag active" title="Toggle dots / line trace">Dots</button>
+              <button id="stereo-gain-btn" class="iris-mini-btn no-drag active" title="Dynamic sensitivity for quiet audio">Auto boost</button>
+            </div>
+            <button class="panel-menu-btn no-drag" title="Module options">
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 6 8 10 12 6"></polyline>
+              </svg>
+            </button>
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-vectorscope"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+
+      <!-- METER 05: ANALOG VU METER -->
+      <section class="panel-card is-hidden" data-module="vu-meter">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">05</span>
+            <span class="panel-name">Analog VU</span>
+            <span class="panel-sub">Ballistics 300ms</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <div class="panel-controls-dropdown no-drag">
+              <button id="vu-mode-btn" class="iris-mini-btn no-drag active" title="Toggle mono / stereo analog meter">Mono</button>
+            </div>
+            <button class="panel-menu-btn no-drag" title="Module options">
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 6 8 10 12 6"></polyline>
+              </svg>
+            </button>
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-vu-meter"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+
+      <!-- METER 06: WAVEFORM TIMELINE -->
+      <section class="panel-card is-hidden" data-module="waveform">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">06</span>
+            <span class="panel-name">Waveform</span>
+            <span class="panel-sub">Raw PCM audio</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <div class="panel-controls-dropdown no-drag">
+              <button id="wave-mode-btn" class="iris-mini-btn no-drag active" title="Toggle live rays / pure live waveform">Live rays</button>
+            </div>
+            <button class="panel-menu-btn no-drag" title="Module options">
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 6 8 10 12 6"></polyline>
+              </svg>
+            </button>
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-waveform"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+
+      <!-- METER 07: LOUDNESS & DYNAMICS -->
+      <section class="panel-card is-hidden" data-module="loudness">
+        <div class="panel-card-header">
+          <div class="panel-title-area">
+            <span class="panel-num">07</span>
+            <span class="panel-name">Loudness</span>
+            <span class="panel-sub">EBU R128 LUFS</span>
+          </div>
+          <div class="panel-actions no-drag">
+            <div class="panel-controls-dropdown no-drag">
+              <button id="lufs-reset-btn" class="iris-mini-btn no-drag" title="Reset integrated LUFS">Reset</button>
+            </div>
+            <button class="panel-menu-btn no-drag" title="Module options">
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 6 8 10 12 6"></polyline>
+              </svg>
+            </button>
+            <button class="btn-solo no-drag" title="Solo and maximize this module">Solo</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas-loudness"></canvas>
+        </div>
+        <div class="resize-handle handle-e" title="Drag to scale width"></div>
+        <div class="resize-handle handle-s" title="Drag to scale height"></div>
+        <div class="resize-handle handle-se" title="Drag to scale diagonally"></div>
+      </section>
+    </main>
+
+    <!-- Floating Draggable Tint Tool Window -->
+    <div id="tint-picker-popover" class="tint-popover no-drag">
+      <div class="tint-popover-header" id="tint-popover-header" title="Drag to reposition window">
+        <div class="tint-header-drag">
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="5" cy="4" r="1" fill="currentColor"></circle>
+            <circle cx="11" cy="4" r="1" fill="currentColor"></circle>
+            <circle cx="5" cy="8" r="1" fill="currentColor"></circle>
+            <circle cx="11" cy="8" r="1" fill="currentColor"></circle>
+            <circle cx="5" cy="12" r="1" fill="currentColor"></circle>
+            <circle cx="11" cy="12" r="1" fill="currentColor"></circle>
+          </svg>
+          <span class="tint-popover-title">Display tint</span>
+        </div>
+        <div class="tint-header-actions">
+          <button id="tint-reset-btn" class="tint-reset-btn no-drag" title="Reset to neutral monochrome">Reset</button>
+          <button id="tint-close-btn" class="tint-close-btn no-drag" title="Close tint window">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <line x1="4" y1="4" x2="12" y2="12"></line>
+              <line x1="12" y1="4" x2="4" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Studio Phosphor Presets -->
+      <div class="tint-section-label">Phosphor presets</div>
+      <div class="tint-presets-grid">
+        <button class="tint-preset-card no-drag active" data-color="#EDEDED" data-name="Monochrome" title="Studio monochrome">
+          <span class="tint-swatch" style="--c: #EDEDED;"></span>
+          <span class="tint-preset-name">Monochrome</span>
+        </button>
+        <button class="tint-preset-card no-drag" data-color="#22C55E" data-name="P1 Phosphor" title="CRT Oscilloscope green">
+          <span class="tint-swatch" style="--c: #22C55E;"></span>
+          <span class="tint-preset-name">P1 Green</span>
+        </button>
+        <button class="tint-preset-card no-drag" data-color="#F59E0B" data-name="Amber Tube" title="Analog tube amber">
+          <span class="tint-swatch" style="--c: #F59E0B;"></span>
+          <span class="tint-preset-name">Amber CRT</span>
+        </button>
+        <button class="tint-preset-card no-drag" data-color="#06B6D4" data-name="Marine Cyan" title="Precision laser cyan">
+          <span class="tint-swatch" style="--c: #06B6D4;"></span>
+          <span class="tint-preset-name">Marine Cyan</span>
+        </button>
+        <button class="tint-preset-card no-drag" data-color="#F43F5E" data-name="Darkroom Red" title="Night vision crimson">
+          <span class="tint-swatch" style="--c: #F43F5E;"></span>
+          <span class="tint-preset-name">Darkroom</span>
+        </button>
+        <button class="tint-preset-card no-drag" data-color="#8B5CF6" data-name="Cobalt UV" title="Deep UV violet">
+          <span class="tint-swatch" style="--c: #8B5CF6;"></span>
+          <span class="tint-preset-name">Cobalt UV</span>
+        </button>
+      </div>
+
+      <!-- Fine Hue Slider -->
+      <div class="tint-slider-group">
+        <div class="tint-slider-header">
+          <span class="tint-slider-title">Custom hue</span>
+          <span id="tint-hue-readout" class="tint-slider-readout">Neutral</span>
+        </div>
+        <input type="range" id="tint-hue-slider" min="0" max="360" value="0" class="tint-slider no-drag" title="Fine hue tuning">
+      </div>
+
+      <!-- Atmosphere Intensity Slider -->
+      <div class="tint-slider-group">
+        <div class="tint-slider-header">
+          <span class="tint-slider-title">Atmosphere</span>
+          <span id="tint-intensity-readout" class="tint-slider-readout">70%</span>
+        </div>
+        <input type="range" id="tint-intensity-slider" min="20" max="100" value="70" class="tint-slider no-drag" title="Tint wash intensity">
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="src/audio-engine.js"></script>
+  <script src="src/visualizers/spectrum.js"></script>
+  <script src="src/visualizers/oscilloscope.js"></script>
+  <script src="src/visualizers/spectrogram.js"></script>
+  <script src="src/visualizers/vectorscope.js"></script>
+  <script src="src/visualizers/vu-meter.js"></script>
+  <script src="src/visualizers/waveform.js"></script>
+  <script src="src/visualizers/loudness.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
